@@ -5,8 +5,6 @@ Param(
 . 'C:\agent\_work\1\s\ADMU\powershell\Functions.ps1'
 #. 'C:\Git\support\ADMU\powershell\Functions.ps1'
 #. 'C:\Users\bob.lazar.JCADB2\Downloads\support-ADMU_1.2.1\support-ADMU_1.2.1\ADMU\powershell\Functions.ps1'
-
-write-host ($null -eq $TestOrgAPIKey)
 	
 Describe 'Functions' {
 
@@ -167,7 +165,7 @@ Describe 'Functions' {
     $AGENT_UNINSTALLER_NAME = "unins000.exe"
     $EVENT_LOGGER_KEY_NAME = "hklm:\SYSTEM\CurrentControlSet\services\eventlog\Application\JumpCloud-agent"
     $INSTALLER_BINARY_NAMES = "JumpCloudInstaller.exe,JumpCloudInstaller.tmp"
-	
+	$JumpCloudConnectKey = $TestOrgAPIKey
 		if ((Test-Path 'C:\Windows\Temp\JCADMU') -eq $true){
                 remove-item -Path 'C:\windows\Temp\JCADMU' -Force
 
