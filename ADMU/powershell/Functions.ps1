@@ -189,7 +189,8 @@ Function Add-LocalUser
 function Check_Program_Installed($programName) {
     $installed = $null
     $installed = (Get-ItemProperty HKLM:\Software\Microsoft\Windows\CurrentVersion\Uninstall\* | Where-Object {$_.DisplayName -match $programName})
-    if ($null -ne $installed) {
+    $installed32 = (Get-ItemProperty HKLM:\SOFTWARE\WOW6432Node\Microsoft\Windows\CurrentVersion\Uninstall\* | Where-Object {$_.DisplayName -match $programName})
+    if (($null -ne $installed) -or ($null -ne $installed32)) {
       return $true
     }
     else {
