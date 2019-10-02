@@ -1,5 +1,13 @@
-#. 'C:\agent\_work\1\s\ADMU\powershell\Functions.ps1'
-. 'C:\Git\support\ADMU\powershell\Functions.ps1'
+Param(
+    [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true, Position = 0)][ValidateNotNullOrEmpty()][System.String]$TestOrgAPIKey
+	)
+
+. 'C:\agent\_work\1\s\ADMU\powershell\Functions.ps1'
+#. 'C:\Git\support\ADMU\powershell\Functions.ps1'
+#. 'C:\Users\bob.lazar.JCADB2\Downloads\support-ADMU_1.2.1\support-ADMU_1.2.1\ADMU\powershell\Functions.ps1'
+
+write-host ($null -eq $TestOrgAPIKey)
+	
 Describe 'Functions' {
 
     Context 'VerifyAccount Function'{
@@ -13,8 +21,9 @@ Describe 'Functions' {
     }#context
 
     Context 'Write-Log Function'{
+	
         It 'Write-Log - Log exists' {
-            if (Test-Path 'C:\Windows\Temp\jcAdmu.log' -eq $true){
+		if ((Test-Path 'C:\Windows\Temp\jcAdmu.log') -eq $true){
                 remove-item -Path 'C:\windows\Temp\jcAdmu.log' -Force
             }
             Write-Log -Message:('System is NOT joined to a domain.') -Level:('Info')
@@ -25,21 +34,27 @@ Describe 'Functions' {
         }
 
         It 'Write-Log - ERROR: Log entry exists' {
-        
+		if ((Test-Path 'C:\Windows\Temp\jcAdmu.log') -eq $true){
+                remove-item -Path 'C:\windows\Temp\jcAdmu.log' -Force
+            }
             Write-Log -Message:('Test Error Log Entry.') -Level:('Error')
             $Log = Get-Content 'c:\windows\temp\jcAdmu.log'
             $Log.Contains('ERROR: Test Error Log Entry.') | Should Be $true
         }
 
         It 'Write-Log - WARNING: Log entry exists' {
-        
+		if ((Test-Path 'C:\Windows\Temp\jcAdmu.log') -eq $true){
+                remove-item -Path 'C:\windows\Temp\jcAdmu.log' -Force
+            }
             Write-Log -Message:('Test Warning Log Entry.') -Level:('Warn')
             $Log = Get-Content 'c:\windows\temp\jcAdmu.log'
             $Log.Contains('WARNING: Test Warning Log Entry.') | Should Be $true
         }
 
         It 'Write-Log - INFO: Log entry exists' {
-        
+        if ((Test-Path 'C:\Windows\Temp\jcAdmu.log') -eq $true){
+                remove-item -Path 'C:\windows\Temp\jcAdmu.log' -Force
+            }
             Write-Log -Message:('Test Info Log Entry.') -Level:('Info')
             $Log = Get-Content 'c:\windows\temp\jcAdmu.log'
             $Log.Contains('INFO: Test Info Log Entry.') | Should Be $true
@@ -142,7 +157,37 @@ Describe 'Functions' {
     $msvc2013x64Link = 'http://download.microsoft.com/download/0/5/6/056dcda9-d667-4e27-8001-8a0c6971d6b1/vcredist_x64.exe'
     $msvc2013x86Install = "$jcAdmuTempPath$msvc2013x86File /install /quiet /norestart"
     $msvc2013x64Install = "$jcAdmuTempPath$msvc2013x64File /install /quiet /norestart"
-    DownloadAndInstallAgent 
+  # JumpCloud Agent Installation Variables
+    $AGENT_PATH = "${env:ProgramFiles}\JumpCloud"
+    $AGENT_CONF_FILE = "\Plugins\Contrib\jcagent.conf"
+    $AGENT_BINARY_NAME = "JumpCloud-agent.exe"
+    $AGENT_SERVICE_NAME = "JumpCloud-agent"
+    $AGENT_INSTALLER_URL = "https://s3.amazonaws.com/jumpcloud-windows-agent/production/JumpCloudInstaller.exe"
+    $AGENT_INSTALLER_PATH = "C:\windows\Temp\JCADMU\JumpCloudInstaller.exe"
+    $AGENT_UNINSTALLER_NAME = "unins000.exe"
+    $EVENT_LOGGER_KEY_NAME = "hklm:\SYSTEM\CurrentControlSet\services\eventlog\Application\JumpCloud-agent"
+    $INSTALLER_BINARY_NAMES = "JumpCloudInstaller.exe,JumpCloudInstaller.tmp"
+	
+		if ((Test-Path 'C:\Windows\Temp\JCADMU') -eq $true){
+                remove-item -Path 'C:\windows\Temp\JCADMU' -Force
+
+            }
+
+				new-item -ItemType Directory -Path 'C:\windows\Temp\JCADMU' -Force 
+          # Agent Installer Loop
+            [int]$InstallReTryCounter = 0
+            Do
+            {
+                $ConfirmInstall = DownloadAndInstallAgent -msvc2013x64link:($msvc2013x64Link) -msvc2013path:($jcAdmuTempPath) -msvc2013x64file:($msvc2013x64File) -msvc2013x64install:($msvc2013x64Install) -msvc2013x86link:($msvc2013x86Link) -msvc2013x86file:($msvc2013x86File) -msvc2013x86install:($msvc2013x86Install)
+                $InstallReTryCounter++
+                If ($InstallReTryCounter -eq 3)
+                {
+                    Write-Log -Message:('JumpCloud agent installation failed') -Level:('Error')
+                    Exit;
+                }
+            } While ($ConfirmInstall -ne $true -and $InstallReTryCounter -le 3)
+     
+
     #uninstall jcagent
     #uninstall c++ 2013 x64
     #uninstall c++ 2013 x86
@@ -157,7 +202,7 @@ Describe 'Functions' {
         }
 
         It 'DownloadAndInstallAgent - Verify Download JCAgent' {
-            Test-path 'C:\Windows\Temp\JCADMU\JumpCloud-agent.exe' | Should Be $true
+            Test-path 'C:\Windows\Temp\JCADMU\JumpCloudInstaller.exe' | Should Be $true
         }
 
         It 'DownloadAndInstallAgent - Verify Install JCAgent prereq Visual C++ 2013 x64' {
